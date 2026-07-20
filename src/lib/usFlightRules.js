@@ -9,9 +9,6 @@
  * - Airline customer service plans (voluntary commitments)
  */
 
-// US domestic airlines and their voluntary disruption policies.
-// Values are the airline's best-case published commitment — the engine
-// always argues from the strongest available basis.
 export const US_AIRLINES = {
   DL: {
     name: "Delta Air Lines",
@@ -79,27 +76,10 @@ export const US_AIRLINES = {
   },
 };
 
-/**
- * Determine if a flight qualifies as "significantly delayed" under DOT
- * interpretation — generally 3+ hours for domestic flights.
- */
 export function isSignificantDelay(delayMinutes) {
   return delayMinutes >= 180;
 }
 
-/**
- * The core engine. Given a disruption scenario, returns the best strategy
- * to MAXIMIZE user benefit — combining mandatory DOT rights with airline
- * voluntary policies and always recommending the highest-value option.
- *
- * @param {object} params
- * @param {string} params.airlineIata - e.g. "DL", "AA"
- * @param {string} params.disruptionType - "delay" | "cancellation"
- * @param {number} params.delayMinutes - delay in minutes (0 for cancellation)
- * @param {string} params.disruptionReason - reason category
- * @param {string} params.ticketPriceUsd - original ticket price
- * @returns {object} strategy
- */
 export function buildStrategy({
   airlineIata,
   disruptionType,
@@ -121,7 +101,6 @@ export function buildStrategy({
   );
   const significant = isSignificantDelay(delayMinutes) || disruptionType === "cancellation";
 
-  // --- Layer 1: DOT mandatory rights (always available) ---
   const dotRights = [];
   let dotCashValue = 0;
 
@@ -152,7 +131,6 @@ export function buildStrategy({
     });
   }
 
-  // --- Layer 2: Airline voluntary policy ---
   const airlineOffer = [];
   let airlineValue = 0;
 
@@ -194,20 +172,14 @@ export function buildStrategy({
     });
   }
 
-  // --- Layer 3: Maximize user benefit ---
-  // Strategy: pursue BOTH the DOT cash refund right AND airline voluntary
-  // benefits — they are not mutually exclusive. The user can take a refund
-  // for the cancelled flight AND still claim meals/hotel/credits.
   const allClaims = [...dotRights, ...airlineOffer];
   const totalValue = allClaims.reduce((sum, c) => sum + (c.value || 0), 0);
 
-  // The recommended ask: full refund (if applicable) + best voluntary package
   const recommendedClaims = [];
   const refundClaim = dotRights.find((c) => c.type === "cash");
   if (refundClaim) recommendedClaims.push(refundClaim);
   recommendedClaims.push(...airlineOffer);
 
-  // Negotiation script the agent should use
   const negotiationScript = buildScript(airline, disruptionType, delayMinutes, controllable, refundClaim, ticketPriceUsd);
 
   return {
@@ -225,7 +197,7 @@ export function buildStrategy({
     airline_benefit_value: airlineValue,
     negotiation_script: negotiationScript,
     preferred_channel: airline.channel,
-    has_api: false, // US airlines don't expose public rebooking APIs
+    has_api: false,
   };
 }
 

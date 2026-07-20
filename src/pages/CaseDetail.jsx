@@ -51,6 +51,10 @@ export default function CaseDetail() {
   }, [caseItem?.status, caseItem?.id]);
 
   const advanceCase = async (c) => {
+    const channel = c.channel || "phone";
+    const strategy = c.negotiation_strategy || [];
+    const maxBenefit = c.max_benefit_usd || 0;
+
     const transitions = {
       analyzing: {
         status: "contacting_airline",
@@ -59,7 +63,7 @@ export default function CaseDetail() {
           direction: "system",
           channel: "system",
           sender: "System",
-          content: `Regulation matched: ${c.applicable_regulation}. Max entitlement: $${c.max_compensation_usd || "—"}. Reaching out via ${c.has_airline_api ? "airline API" : "preferred channel"}.`,
+          content: `Strategy locked: ${c.applicable_regulation}. Max benefit target: $${maxBenefit}. Reaching ${c.airline_name || "airline"} via ${channel}.`,
         },
       },
       contacting_airline: {
@@ -67,9 +71,9 @@ export default function CaseDetail() {
         label: "Negotiating",
         log: {
           direction: "outbound",
-          channel: c.has_airline_api ? "api" : "phone",
+          channel: channel,
           sender: "FlightGuard Agent",
-          content: `Hello, regarding flight ${c.flight_number} (${c.origin}→${c.destination}) — the passenger experienced a ${c.disruption_type}. Requesting rebooking options and applicable compensation per ${c.applicable_regulation}.`,
+          content: strategy[0] || `Contacting ${c.airline_name || "airline"} regarding flight ${c.flight_number} (${c.origin}→${c.destination}). The passenger experienced a ${c.disruption_type}.`,
         },
       },
       negotiating: {
@@ -77,9 +81,9 @@ export default function CaseDetail() {
         label: "Solution received",
         log: {
           direction: "inbound",
-          channel: c.has_airline_api ? "api" : "phone",
+          channel: channel,
           sender: c.airline_name || "Airline",
-          content: `We apologize for the inconvenience. We can offer a rebooking and compensation as detailed in the proposed solution.`,
+          content: `We apologize for the disruption. Based on the agent's request citing ${c.applicable_regulation}, we can offer the following: ${c.controllable ? "full refund + rebooking + accommodations" : "refund + rebooking"} per regulation.`,
         },
       },
       solution_received: {
@@ -98,17 +102,12 @@ export default function CaseDetail() {
     const next = transitions[c.status];
     if (!next) return;
 
-    // On first transition out of analyzing, set regulation + comp if missing
     const patch = { status: next.status, current_step_label: next.label };
-    if (c.status === "analyzing" && (!c.applicable_regulation || c.applicable_regulation === "Analyzing…")) {
-      patch.applicable_regulation = "EU261";
-      patch.max_compensation_usd = 600;
-    }
     if (c.status === "negotiating") {
-      patch.solution_summary = `Alternative flight available with ${c.airline_name || "the airline"}. Compensation offered within regulation limits.`;
-      patch.proposed_compensation_usd = 520;
-      patch.rebook_flight_number = c.flight_number.replace(/\d+$/, (n) => String(parseInt(n) + 1));
-      patch.assistance_offered = "Hotel + meal vouchers";
+      patch.solution_summary = `${c.airline_name || "Airline"} offered a package per ${c.applicable_regulation}. ${c.controllable ? "Includes meals and hotel (controllable delay)." : "Weather/ATC delay — refund + rebooking only."}`;
+      patch.proposed_compensation_usd = maxBenefit;
+      patch.rebook_flight_number = c.flight_number?.replace(/\d+$/, (n) => String(parseInt(n) + 1));
+      patch.assistance_offered = c.controllable ? "Hotel + meal vouchers" : "Rebooking only";
     }
 
     await base44.entities.FlightCase.update(c.id, patch);
@@ -211,9 +210,9 @@ export default function CaseDetail() {
           <div className="text-sm font-semibold text-white">{caseItem.applicable_regulation || "Analyzing…"}</div>
         </div>
         <div className="text-right">
-          <div className="text-xs text-slate-500">Max entitlement</div>
+          <div className="text-xs text-slate-500">Max benefit target</div>
           <div className="text-sm font-bold text-emerald-400 font-mono">
-            {caseItem.max_compensation_usd ? `$${caseItem.max_compensation_usd.toLocaleString()}` : "—"}
+            {caseItem.max_benefit_usd ? `$${caseItem.max_benefit_usd.toLocaleString()}` : "—"}
           </div>
         </div>
       </div>
