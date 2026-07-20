@@ -1,0 +1,53 @@
+{
+  "name": "CommunicationLog",
+  "type": "object",
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "Reference to FlightCase id"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "outbound",
+        "inbound",
+        "system"
+      ],
+      "description": "outbound = Agent to airline; inbound = airline reply; system = internal status event"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "api",
+        "phone",
+        "sms",
+        "whatsapp",
+        "app",
+        "system"
+      ]
+    },
+    "sender": {
+      "type": "string",
+      "description": "Who sent the message: Agent / Airline name / System"
+    },
+    "content": {
+      "type": "string",
+      "description": "Message body or event description"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional structured data, e.g. proposed options"
+    },
+    "requires_user_attention": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "case_id",
+    "direction",
+    "channel",
+    "sender",
+    "content"
+  ]
+}

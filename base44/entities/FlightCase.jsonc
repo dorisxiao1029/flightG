@@ -1,0 +1,150 @@
+{
+  "name": "FlightCase",
+  "type": "object",
+  "properties": {
+    "case_number": {
+      "type": "string",
+      "description": "Unique case reference, e.g. FG-2026-00123"
+    },
+    "flight_number": {
+      "type": "string",
+      "description": "Airline IATA code + flight number, e.g. CA1234"
+    },
+    "airline_name": {
+      "type": "string"
+    },
+    "origin": {
+      "type": "string",
+      "description": "Departure airport IATA code"
+    },
+    "destination": {
+      "type": "string",
+      "description": "Arrival airport IATA code"
+    },
+    "scheduled_departure": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cabin_class": {
+      "type": "string",
+      "enum": [
+        "economy",
+        "premium_economy",
+        "business",
+        "first"
+      ],
+      "default": "economy"
+    },
+    "disruption_type": {
+      "type": "string",
+      "enum": [
+        "delay",
+        "cancellation",
+        "diversion"
+      ],
+      "default": "delay"
+    },
+    "disruption_reason": {
+      "type": "string"
+    },
+    "applicable_regulation": {
+      "type": "string",
+      "description": "Matched regulation, e.g. EU261, CAAC, DOT"
+    },
+    "max_compensation_usd": {
+      "type": "number",
+      "description": "Maximum compensation the user is entitled to, per matched regulation"
+    },
+    "user_intent": {
+      "type": "string",
+      "enum": [
+        "rebook",
+        "compensation",
+        "both",
+        "assistance"
+      ],
+      "default": "both",
+      "description": "rebook = prioritize rebooking; compensation = prioritize financial claim; both = pursue all; assistance = meals/lodging"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "api",
+        "phone",
+        "sms",
+        "whatsapp",
+        "app"
+      ],
+      "description": "Primary channel used to contact airline"
+    },
+    "has_airline_api": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "analyzing",
+        "contacting_airline",
+        "negotiating",
+        "solution_received",
+        "awaiting_user_confirmation",
+        "completing",
+        "closed_success",
+        "closed_failed",
+        "cancelled"
+      ],
+      "default": "draft"
+    },
+    "current_step_label": {
+      "type": "string",
+      "description": "Human-readable label of the current progress step"
+    },
+    "solution_summary": {
+      "type": "string",
+      "description": "Summary of the proposed solution from the airline"
+    },
+    "proposed_compensation_usd": {
+      "type": "number"
+    },
+    "rebook_flight_number": {
+      "type": "string"
+    },
+    "rebook_departure": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "assistance_offered": {
+      "type": "string",
+      "description": "Meals/lodging offered by airline"
+    },
+    "user_decision": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected",
+        "renegotiate"
+      ],
+      "default": "pending"
+    },
+    "fee_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "fee_paid": {
+      "type": "boolean",
+      "default": false
+    },
+    "created_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "flight_number",
+    "origin",
+    "destination",
+    "disruption_type"
+  ]
+}
