@@ -8,7 +8,11 @@
     },
     "flight_number": {
       "type": "string",
-      "description": "Airline IATA code + flight number, e.g. CA1234"
+      "description": "Flight IATA code + number, e.g. DL1234"
+    },
+    "airline_iata": {
+      "type": "string",
+      "description": "Airline IATA code, e.g. DL, AA, UA"
     },
     "airline_name": {
       "type": "string"
@@ -35,6 +39,10 @@
       ],
       "default": "economy"
     },
+    "ticket_price_usd": {
+      "type": "number",
+      "description": "Original ticket price paid by user"
+    },
     "disruption_type": {
       "type": "string",
       "enum": [
@@ -44,16 +52,44 @@
       ],
       "default": "delay"
     },
+    "delay_minutes": {
+      "type": "number",
+      "description": "Verified delay in minutes from flight status API"
+    },
     "disruption_reason": {
       "type": "string"
     },
+    "controllable": {
+      "type": "boolean",
+      "description": "Whether the disruption is within airline control (not weather/ATC)"
+    },
+    "flight_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the disruption was verified via real flight status API"
+    },
     "applicable_regulation": {
       "type": "string",
-      "description": "Matched regulation, e.g. EU261, CAAC, DOT"
+      "description": "Matched regulation, e.g. DOT Part 260 (Refunds)"
     },
-    "max_compensation_usd": {
+    "max_benefit_usd": {
       "type": "number",
-      "description": "Maximum compensation the user is entitled to, per matched regulation"
+      "description": "Maximum total benefit the agent will pursue (refund + credits + accommodations)"
+    },
+    "dot_cash_value": {
+      "type": "number",
+      "description": "DOT-mandated cash refund value"
+    },
+    "airline_benefit_value": {
+      "type": "number",
+      "description": "Voluntary airline benefit value (credits + vouchers)"
+    },
+    "negotiation_strategy": {
+      "type": "array",
+      "description": "Step-by-step negotiation script the agent will follow",
+      "items": {
+        "type": "string"
+      }
     },
     "user_intent": {
       "type": "string",
@@ -64,7 +100,7 @@
         "assistance"
       ],
       "default": "both",
-      "description": "rebook = prioritize rebooking; compensation = prioritize financial claim; both = pursue all; assistance = meals/lodging"
+      "description": "rebook = prioritize rebooking; compensation = prioritize refund/claim; both = pursue all; assistance = meals/lodging"
     },
     "channel": {
       "type": "string",
@@ -98,12 +134,10 @@
       "default": "draft"
     },
     "current_step_label": {
-      "type": "string",
-      "description": "Human-readable label of the current progress step"
+      "type": "string"
     },
     "solution_summary": {
-      "type": "string",
-      "description": "Summary of the proposed solution from the airline"
+      "type": "string"
     },
     "proposed_compensation_usd": {
       "type": "number"
@@ -116,8 +150,7 @@
       "format": "date-time"
     },
     "assistance_offered": {
-      "type": "string",
-      "description": "Meals/lodging offered by airline"
+      "type": "string"
     },
     "user_decision": {
       "type": "string",
@@ -136,9 +169,6 @@
     "fee_paid": {
       "type": "boolean",
       "default": false
-    },
-    "created_by_name": {
-      "type": "string"
     }
   },
   "required": [
