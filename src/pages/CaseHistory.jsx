@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import CaseCard from "@/components/CaseCard";
 import { History as HistoryIcon } from "lucide-react";
@@ -15,12 +15,18 @@ export default function CaseHistory() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
-  useEffect(() => {
-    base44.entities.FlightCase.list("-created_date", 100)
+  const load = useCallback(() => {
+    return base44.entities.FlightCase.list("-created_date", 100)
       .then(setCases)
       .catch(() => setCases([]))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    load();
+    const unsubscribe = base44.entities.FlightCase.subscribe(() => load());
+    return unsubscribe;
+  }, [load]);
 
   const filtered = cases.filter((c) => {
     if (filter === "all") return true;

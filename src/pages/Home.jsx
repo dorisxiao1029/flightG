@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { PlusCircle, Shield, Zap, FileCheck, TrendingUp } from "lucide-react";
+import { PlusCircle, Shield, Zap, FileCheck, TrendingUp, Radio } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import CaseCard from "@/components/CaseCard";
 
@@ -8,12 +8,18 @@ export default function Home() {
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    base44.entities.FlightCase.list("-created_date", 50)
+  const load = useCallback(() => {
+    return base44.entities.FlightCase.list("-created_date", 50)
       .then(setCases)
       .catch(() => setCases([]))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    load();
+    const unsubscribe = base44.entities.FlightCase.subscribe(() => load());
+    return unsubscribe;
+  }, [load]);
 
   const active = cases.filter((c) => !["closed_success", "closed_failed", "cancelled"].includes(c.status));
   const needsAction = cases.filter((c) => c.status === "awaiting_user_confirmation");
@@ -25,7 +31,13 @@ export default function Home() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Command Center</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold text-white tracking-tight">Command Center</h1>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold uppercase tracking-wider">
+              <Radio className="w-2.5 h-2.5 animate-pulse" />
+              Live
+            </span>
+          </div>
           <p className="text-sm text-slate-500 mt-1">
             Your autonomous agent is monitoring flight disruptions.
           </p>

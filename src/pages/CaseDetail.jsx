@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import ProgressTimeline from "@/components/ProgressTimeline";
 import ChatLog from "@/components/ChatLog";
 import SolutionCard from "@/components/SolutionCard";
+import { logWithEvidence } from "@/lib/evidenceStore";
 import moment from "moment";
 
 export default function CaseDetail() {
@@ -31,9 +32,15 @@ export default function CaseDetail() {
 
   useEffect(() => {
     load();
-    const unsubscribe = base44.entities.CommunicationLog.subscribe(() => load());
-    return unsubscribe;
-  }, [load]);
+    const unsubLogs = base44.entities.CommunicationLog.subscribe(() => load());
+    const unsubCase = base44.entities.FlightCase.subscribe((e) => {
+      if (e.id === id) load();
+    });
+    return () => {
+      unsubLogs();
+      unsubCase();
+    };
+  }, [load, id]);
 
   // Simulated agent progress: advances through steps when in an active state
   useEffect(() => {
@@ -110,8 +117,11 @@ export default function CaseDetail() {
       patch.assistance_offered = c.controllable ? "Hotel + meal vouchers" : "Rebooking only";
     }
 
-    await base44.entities.FlightCase.update(c.id, patch);
-    await base44.entities.CommunicationLog.create({ ...next.log, case_id: c.id });
+    const updated = await base44.entities.FlightCase.update(c.id, patch);
+    await logWithEvidence({
+      caseItem: updated || { ...c, ...patch },
+      log: { ...next.log, case_id: c.id },
+    });
   };
 
   const handleDecision = async (decision) => {
@@ -128,18 +138,22 @@ export default function CaseDetail() {
         patch.status = "negotiating";
         patch.current_step_label = "Renegotiating";
       }
-      await base44.entities.FlightCase.update(caseItem.id, patch);
-      await base44.entities.CommunicationLog.create({
-        case_id: caseItem.id,
-        direction: "system",
-        channel: "system",
-        sender: "System",
-        content:
-          decision === "accepted"
-            ? "User accepted the solution. Agent is finalizing with the airline."
-            : decision === "rejected"
-            ? "User rejected the solution. Case closed."
-            : "User requested renegotiation. Agent is re-engaging the airline.",
+      const updated = await base44.entities.FlightCase.update(caseItem.id, patch);
+      await logWithEvidence({
+        caseItem: updated || { ...caseItem, ...patch },
+        log: {
+          case_id: caseItem.id,
+          direction: "system",
+          channel: "system",
+          sender: "System",
+          content:
+            decision === "accepted"
+              ? "User accepted the solution. Agent is finalizing with the airline."
+              : decision === "rejected"
+              ? "User rejected the solution. Case closed."
+              : "User requested renegotiation. Agent is re-engaging the airline.",
+          metadata: { event: "user_decision", decision },
+        },
       });
       toast({ title: decision === "accepted" ? "Solution accepted" : "Decision recorded" });
       load();

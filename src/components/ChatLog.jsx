@@ -1,7 +1,25 @@
 import React, { useEffect, useRef } from "react";
-import { Bot, Building2, Cog } from "lucide-react";
+import { Bot, Building2, Cog, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import moment from "moment";
+
+function EvidenceLink({ metadata }) {
+  const url = metadata?.artifact_url;
+  if (!url) return null;
+  const hash = metadata?.artifact_hash;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      title={hash ? `Evidence artifact — sha256-${hash}` : "Evidence artifact"}
+      className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-emerald-400 transition-colors"
+    >
+      <ShieldCheck className="w-2.5 h-2.5" />
+      Evidence{hash ? ` · ${hash.slice(0, 6)}` : ""}
+    </a>
+  );
+}
 
 export default function ChatLog({ logs }) {
   const endRef = useRef(null);
@@ -24,11 +42,12 @@ export default function ChatLog({ logs }) {
 
         if (isSystem) {
           return (
-            <div key={log.id} className="flex justify-center">
+            <div key={log.id} className="flex flex-col items-center gap-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-[11px] text-slate-500">
                 <Cog className="w-3 h-3" />
                 {log.content}
               </div>
+              <EvidenceLink metadata={log.metadata} />
             </div>
           );
         }
@@ -61,8 +80,9 @@ export default function ChatLog({ logs }) {
               >
                 {log.content}
               </div>
-              <div className={cn("text-[10px] text-slate-600 mt-1", isOutbound ? "text-right" : "text-left")}>
-                {log.created_date ? moment(log.created_date).format("MMM D, HH:mm:ss") : ""}
+              <div className={cn("flex items-center gap-2 text-[10px] text-slate-600 mt-1", isOutbound ? "justify-end" : "justify-start")}>
+                <span>{log.created_date ? moment(log.created_date).format("MMM D, HH:mm:ss") : ""}</span>
+                <EvidenceLink metadata={log.metadata} />
               </div>
             </div>
           </div>

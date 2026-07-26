@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Target, DollarSign, Plane, Bed, Shield, Check, TrendingUp, Scale } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import FlightInfoForm from "@/components/FlightInfoForm";
 import { buildStrategy } from "@/lib/usFlightRules";
+import { logWithEvidence } from "@/lib/evidenceStore";
 import { cn } from "@/lib/utils";
 
 const intents = [
@@ -19,6 +21,7 @@ const FEE = 29;
 export default function NewCase() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAuthenticated, navigateToLogin } = useAuth();
   const [step, setStep] = useState(1);
   const [flight, setFlight] = useState(null);
   const [disruptionType, setDisruptionType] = useState("delay");
@@ -49,6 +52,14 @@ export default function NewCase() {
   };
 
   const handleCreate = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign in to claim your benefits",
+        description: "We only ask for login when the agent is about to act on your behalf.",
+      });
+      navigateToLogin();
+      return;
+    }
     setCreating(true);
     try {
       const caseNumber = `FG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -76,12 +87,23 @@ export default function NewCase() {
         fee_paid: true,
       });
 
-      await base44.entities.CommunicationLog.create({
-        case_id: created.id,
-        direction: "system",
-        channel: "system",
-        sender: "System",
-        content: `Case opened for ${flight.flight_number} (${strategy.airline.name}). Disruption: ${disruptionType}. Strategy computed: max benefit $${strategy.max_benefit_usd}.`,
+      await logWithEvidence({
+        caseItem: created,
+        log: {
+          case_id: created.id,
+          direction: "system",
+          channel: "system",
+          sender: "System",
+          content: `Case opened for ${flight.flight_number} (${strategy.airline.name}). Disruption: ${disruptionType}. Strategy computed: max benefit $${strategy.max_benefit_usd}.`,
+          metadata: {
+            event: "case_opened",
+            strategy: {
+              regulation: strategy.applicable_regulation,
+              max_benefit_usd: strategy.max_benefit_usd,
+              controllable: strategy.controllable,
+            },
+          },
+        },
       });
 
       toast({ title: "Agent launched", description: `Pursuing $${strategy.max_benefit_usd} in total benefits.` });
@@ -301,7 +323,11 @@ export default function NewCase() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2F81F7] hover:bg-[#1F6FE0] text-white text-sm font-medium disabled:opacity-50"
             >
               <Target className="w-4 h-4" />
-              {creating ? "Launching agent…" : "Launch agent"}
+              {creating
+                ? "Launching agent…"
+                : isAuthenticated
+                ? "Launch agent"
+                : "Sign in to launch"}
             </button>
           </div>
         </div>
