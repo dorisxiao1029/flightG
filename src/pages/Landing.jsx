@@ -11,7 +11,8 @@ import {
   FileText,
   DollarSign,
   Plane,
-  CheckCircle2,
+  XCircle,
+  HelpCircle,
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
@@ -160,47 +161,67 @@ export default function Landing() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <GlowBackdrop />
-        <div className="relative max-w-6xl mx-auto px-5 pt-20 pb-16 lg:pt-28 lg:pb-24 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-[11px] text-slate-400 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Powered by DOT 14 CFR Part 259 · Live for U.S. domestic flights
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.05]">
-            Your AI agent fights the airline
-            <br />
-            <span className="text-[#2F81F7]">for your DOT refund.</span>
-          </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-base sm:text-lg text-slate-400 leading-relaxed">
-            Cancelled flight? Delayed 3+ hours? An autonomous agent negotiates the refund
-            the DOT says you're owed — cites the exact regulation, works the airline, files
-            a DOT complaint if they refuse. No phone calls. No forms.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              to="/new"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-[#2F81F7] hover:bg-[#1F6FE0] text-white text-sm font-semibold transition-colors shadow-lg shadow-[#2F81F7]/25"
-            >
-              Start a case — free to check
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a
-              href="#how"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 hover:border-white/20 text-sm text-slate-300 hover:text-white transition-colors"
-            >
-              See how it works
-            </a>
-          </div>
-          <div className="mt-6 text-xs text-slate-600">
-            $29 flat per case · Charged only when the agent starts · No commission on your refund
+        <div className="relative max-w-6xl mx-auto px-5 pt-16 pb-16 lg:pt-24 lg:pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            {/* Left: copy */}
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-[11px] text-slate-400 mb-5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                U.S. flights · Federal refund rights, enforced by AI
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.05]">
+                Delayed or canceled flight?{" "}
+                <span className="text-[#2F81F7]">Get up to $700.</span>
+              </h1>
+              <p className="mt-6 text-base sm:text-lg text-slate-400 leading-relaxed max-w-xl">
+                U.S. federal law says the airline owes you a refund — cash, not vouchers —
+                when your flight is disrupted. Our AI agent negotiates it for you. You don't
+                touch a phone.
+              </p>
+              <div className="mt-6 text-xs text-slate-600">
+                $29 flat per case · Charged only when the agent starts · No commission on your refund
+              </div>
+            </div>
+
+            {/* Right: action card — the CTA IS the first step */}
+            <div className="rounded-2xl border border-white/10 bg-[#161B22] p-6 sm:p-7 shadow-2xl shadow-black/40">
+              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
+                What happened to your flight?
+              </div>
+              <div className="space-y-2.5">
+                <DisruptionChoice
+                  icon={Zap}
+                  label="My flight was delayed"
+                  desc="3+ hours late is where refunds unlock."
+                  onClick={() => navigate("/new?disruption=delay")}
+                />
+                <DisruptionChoice
+                  icon={XCircle}
+                  label="My flight was canceled"
+                  desc="You're owed a full cash refund, always."
+                  onClick={() => navigate("/new?disruption=cancellation")}
+                />
+                <DisruptionChoice
+                  icon={HelpCircle}
+                  label="Something else"
+                  desc="Diverted, denied boarding, tarmac stuck…"
+                  onClick={() => navigate("/new?disruption=diversion")}
+                />
+              </div>
+              <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-500">
+                <span>Free to check what you're owed</span>
+                <span className="text-emerald-400">✓ No signup required</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Trust stats row */}
         <div className="relative max-w-5xl mx-auto px-5 pb-16 grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <TrustStat icon={DollarSign} value="Up to $700" label="Per passenger (DOT ceiling)" />
-          <TrustStat icon={Scale} value="8 airlines" label="US domestic coverage" />
-          <TrustStat icon={Lock} value="SHA-256" label="Evidence integrity" />
-          <TrustStat icon={Radio} value="Real-time" label="Live case status" />
+          <TrustStat icon={DollarSign} value="Up to $700" label="Per passenger" />
+          <TrustStat icon={Scale} value="8 airlines" label="U.S. coverage" />
+          <TrustStat icon={Lock} value="Tamper-proof" label="Evidence chain" />
+          <TrustStat icon={Radio} value="Real-time" label="Case updates" />
         </div>
       </section>
 
@@ -216,7 +237,7 @@ export default function Landing() {
             />
             <ProblemTile
               icon={FileText}
-              label="DOT complaint form"
+              label="Filing the complaint yourself"
               value="30 min"
               tone="red"
             />
@@ -228,7 +249,7 @@ export default function Landing() {
             />
           </div>
           <p className="text-center text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
-            The DOT wrote the refund into federal regulation.{" "}
+            Federal law says you're owed a refund.{" "}
             <span className="text-white">The airline hopes you're too busy to claim it.</span>{" "}
             FlightGuard closes that gap — automatically.
           </p>
@@ -383,6 +404,25 @@ function GlowBackdrop() {
       <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-[#2F81F7]/10 blur-3xl" />
       <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-violet-500/8 blur-3xl" />
     </div>
+  );
+}
+
+function DisruptionChoice({ icon: Icon, label, desc, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full flex items-center gap-3 text-left rounded-xl border border-white/5 bg-white/[0.02] hover:border-[#2F81F7]/50 hover:bg-[#2F81F7]/[0.06] px-4 py-3 transition-all"
+    >
+      <div className="w-9 h-9 rounded-lg bg-[#2F81F7]/10 text-[#2F81F7] flex items-center justify-center shrink-0">
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-white">{label}</div>
+        <div className="text-[11px] text-slate-500 mt-0.5">{desc}</div>
+      </div>
+      <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-[#2F81F7] group-hover:translate-x-0.5 transition-all" />
+    </button>
   );
 }
 

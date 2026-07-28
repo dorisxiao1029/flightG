@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Target, DollarSign, Plane, Bed, Shield, Check, TrendingUp, Scale } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -18,13 +18,20 @@ const intents = [
 
 const FEE = 29;
 
+const VALID_DISRUPTIONS = new Set(["delay", "cancellation", "diversion"]);
+
 export default function NewCase() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { isAuthenticated, navigateToLogin } = useAuth();
+  const initialDisruption = (() => {
+    const q = searchParams.get("disruption");
+    return q && VALID_DISRUPTIONS.has(q) ? q : "delay";
+  })();
   const [step, setStep] = useState(1);
   const [flight, setFlight] = useState(null);
-  const [disruptionType, setDisruptionType] = useState("delay");
+  const [disruptionType, setDisruptionType] = useState(initialDisruption);
   const [delayMinutes, setDelayMinutes] = useState(180);
   const [disruptionReason, setDisruptionReason] = useState("");
   const [ticketPrice, setTicketPrice] = useState(350);
