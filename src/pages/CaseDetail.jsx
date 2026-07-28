@@ -57,50 +57,70 @@ export default function CaseDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseItem?.status, caseItem?.id]);
 
+  // Client-side simulation of the agent pipeline. Each tick advances one step.
+  // Reflects the real channel plan: chat first → escalate to phone if chat
+  // queue is long or bot can't process a refund → email as parallel paper trail.
+  // At solution time, the airline surfaces BOTH mutually-exclusive DOT paths
+  // (refund vs rebook) — the user picks in SolutionCard.
   const advanceCase = async (c) => {
-    const channel = c.channel || "phone";
-    const strategy = c.negotiation_strategy || [];
-    const maxBenefit = c.max_benefit_usd || 0;
+    const airline = c.airline_name || "Airline";
+    const refundValue = c.dot_cash_value || c.ticket_price_usd || 0;
 
     const transitions = {
       analyzing: {
         status: "contacting_airline",
-        label: "Contacting airline",
+        label: "Opening live chat",
+        patch: { channel: "chat" },
         log: {
           direction: "system",
-          channel: "system",
+          channel: "chat",
           sender: "System",
-          content: `Strategy locked: ${c.applicable_regulation}. Max benefit target: $${maxBenefit}. Reaching ${c.airline_name || "airline"} via ${channel}.`,
+          content: `Agent opened ${airline}'s live chat widget. Case reference cited, human-handoff requested. Queue estimate: ~3 min.`,
+          metadata: { event: "channel_opened", channel: "chat" },
         },
       },
       contacting_airline: {
         status: "negotiating",
-        label: "Negotiating",
+        label: "Chat bot — negotiating",
+        patch: { channel: "chat" },
         log: {
           direction: "outbound",
-          channel: channel,
+          channel: "chat",
           sender: "Envoy",
-          content: strategy[0] || `Contacting ${c.airline_name || "airline"} regarding flight ${c.flight_number} (${c.origin}→${c.destination}). The passenger experienced a ${c.disruption_type}.`,
+          content: `Hello — I'm representing the passenger on ${c.flight_number} (${c.origin}→${c.destination}, ${new Date(c.scheduled_departure || Date.now()).toDateString()}). The flight was ${c.disruption_type === "cancellation" ? "cancelled" : `delayed ${c.delay_minutes} minutes`}${c.disruption_reason ? ` due to ${c.disruption_reason}` : ""}. Under DOT 14 CFR Part 260, the passenger is entitled to EITHER (A) rebooking on the earliest available flight (including interline partners) OR (B) a full cash refund of $${refundValue}. Please confirm which options you can process on this channel.`,
+          metadata: { event: "opening_ask", channel: "chat" },
         },
       },
       negotiating: {
         status: "solution_received",
-        label: "Solution received",
+        label: "Options received",
+        patch: {
+          solution_summary: `${airline} confirmed both DOT Part 260 paths. You must choose one — they are mutually exclusive.`,
+          proposed_compensation_usd: refundValue,
+          rebook_flight_number: c.flight_number?.replace(/\d+$/, (n) => String(parseInt(n) + 1)),
+          rebook_departure: new Date(Date.now() + 5 * 3600 * 1000).toISOString(),
+          assistance_offered: c.controllable
+            ? "Meal voucher included with either path. Hotel if overnight."
+            : "Rebooking or refund only (uncontrollable — no meal/hotel duty).",
+        },
         log: {
           direction: "inbound",
-          channel: channel,
-          sender: c.airline_name || "Airline",
-          content: `We apologize for the disruption. Based on the agent's request citing ${c.applicable_regulation}, we can offer the following: ${c.controllable ? "full refund + rebooking + accommodations" : "refund + rebooking"} per regulation.`,
+          channel: "chat",
+          sender: airline,
+          content: `Confirmed. For this disruption we can offer: (A) Rebook on the next available flight — earliest option departs in ~5 hours, or via partner if you prefer. Voluntary $${c.airline_benefit_value || 0} travel credit included as goodwill. (B) Full cash refund of $${refundValue} per DOT Part 260 — you decline rebooking. ${c.controllable ? "Meal voucher applies to either. Hotel available if overnight." : "No meal/hotel duty — uncontrollable cause."} Please advise which option the passenger prefers.`,
+          metadata: { event: "airline_offer", refund_value: refundValue, rebook_available: true },
         },
       },
       solution_received: {
         status: "awaiting_user_confirmation",
-        label: "Awaiting your confirmation",
+        label: "Awaiting your choice",
+        patch: {},
         log: {
           direction: "system",
           channel: "system",
           sender: "System",
-          content: "A solution has been proposed. Please review and decide.",
+          content: "Airline surfaced both DOT Part 260 paths. Refund and rebook are mutually exclusive — please pick one.",
+          metadata: { event: "user_decision_required" },
           requires_user_attention: true,
         },
       },
@@ -109,14 +129,7 @@ export default function CaseDetail() {
     const next = transitions[c.status];
     if (!next) return;
 
-    const patch = { status: next.status, current_step_label: next.label };
-    if (c.status === "negotiating") {
-      patch.solution_summary = `${c.airline_name || "Airline"} offered a package per ${c.applicable_regulation}. ${c.controllable ? "Includes meals and hotel (controllable delay)." : "Weather/ATC delay — refund + rebooking only."}`;
-      patch.proposed_compensation_usd = maxBenefit;
-      patch.rebook_flight_number = c.flight_number?.replace(/\d+$/, (n) => String(parseInt(n) + 1));
-      patch.assistance_offered = c.controllable ? "Hotel + meal vouchers" : "Rebooking only";
-    }
-
+    const patch = { status: next.status, current_step_label: next.label, ...(next.patch || {}) };
     const updated = await base44.entities.FlightCase.update(c.id, patch);
     await logWithEvidence({
       caseItem: updated || { ...c, ...patch },
@@ -124,20 +137,42 @@ export default function CaseDetail() {
     });
   };
 
+  // decision = { type: 'accept', path: 'refund' | 'rebook' } | { type: 'reject' } | { type: 'renegotiate' }
   const handleDecision = async (decision) => {
     setActing(true);
     try {
-      const patch = { user_decision: decision };
-      if (decision === "accepted") {
+      const airline = caseItem.airline_name || "Airline";
+      const refundValue = caseItem.dot_cash_value || caseItem.ticket_price_usd || 0;
+      const rebookFlight = caseItem.rebook_flight_number || "next available";
+      const rebookCredit = caseItem.airline_benefit_value || 0;
+
+      const patch = { user_decision: decision.type === "accept" ? "accepted" : decision.type === "reject" ? "rejected" : "renegotiate" };
+      let logContent = "";
+
+      if (decision.type === "accept") {
         patch.status = "completing";
-        patch.current_step_label = "Finalizing";
-      } else if (decision === "rejected") {
+        patch.chosen_path = decision.path;
+        if (decision.path === "refund") {
+          patch.current_step_label = `Finalizing $${refundValue} cash refund`;
+          patch.proposed_compensation_usd = refundValue;
+          patch.assistance_offered = "Cash refund — no rebooking, per DOT Part 260.";
+          logContent = `User picked the REFUND path. Agent instructing ${airline} to process $${refundValue} cash refund to the original payment method (7–10 business days). Rebooking declined per DOT Part 260 mutual-exclusivity.`;
+        } else {
+          patch.current_step_label = `Finalizing rebooking on ${rebookFlight}`;
+          patch.proposed_compensation_usd = rebookCredit;
+          patch.assistance_offered = `Rebooked on ${rebookFlight}${rebookCredit ? ` + $${rebookCredit} goodwill credit` : ""}.`;
+          logContent = `User picked the REBOOK path. Agent instructing ${airline} to confirm seat on ${rebookFlight}${rebookCredit ? ` and issue $${rebookCredit} travel credit` : ""}. Cash refund declined per DOT Part 260 mutual-exclusivity.`;
+        }
+      } else if (decision.type === "reject") {
         patch.status = "closed_failed";
-        patch.current_step_label = "Closed — rejected";
-      } else if (decision === "renegotiate") {
+        patch.current_step_label = "Closed — both paths rejected";
+        logContent = "User rejected both DOT Part 260 paths. Agent will escalate to a formal DOT complaint (14 CFR Part 259) using the stored evidence chain.";
+      } else {
         patch.status = "negotiating";
         patch.current_step_label = "Renegotiating";
+        logContent = "User requested renegotiation. Agent re-engaging the airline for improved terms (goodwill credit, upgrade, hotel).";
       }
+
       const updated = await base44.entities.FlightCase.update(caseItem.id, patch);
       await logWithEvidence({
         caseItem: updated || { ...caseItem, ...patch },
@@ -146,16 +181,15 @@ export default function CaseDetail() {
           direction: "system",
           channel: "system",
           sender: "System",
-          content:
-            decision === "accepted"
-              ? "User accepted the solution. Agent is finalizing with the airline."
-              : decision === "rejected"
-              ? "User rejected the solution. Case closed."
-              : "User requested renegotiation. Agent is re-engaging the airline.",
-          metadata: { event: "user_decision", decision },
+          content: logContent,
+          metadata: { event: "user_decision", decision: decision.type, path: decision.path },
         },
       });
-      toast({ title: decision === "accepted" ? "Solution accepted" : "Decision recorded" });
+      toast({
+        title: decision.type === "accept"
+          ? decision.path === "refund" ? "Refund path locked" : "Rebook path locked"
+          : "Decision recorded",
+      });
       load();
     } finally {
       setActing(false);
@@ -185,6 +219,22 @@ export default function CaseDetail() {
         <ArrowLeft className="w-4 h-4" />
         Dashboard
       </Link>
+
+      {/* Simulation banner — honest label until a real backend dispatcher is wired */}
+      {caseItem.is_simulation && (
+        <div className="rounded-lg border border-amber-500/25 bg-amber-500/[0.05] px-4 py-2.5 mb-4 flex items-start gap-2.5 text-xs">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-semibold uppercase tracking-wider text-[10px] shrink-0">
+            Simulation
+          </span>
+          <span className="text-slate-400 leading-relaxed">
+            Real airline dispatch (chat / phone / email) is not wired yet. This
+            case walks through the exact pipeline the agent will follow, using
+            the strategy we computed. Every log line and evidence artifact
+            below is real (written to storage) — only the airline replies are
+            simulated.
+          </span>
+        </div>
+      )}
 
       {/* Case header */}
       <div className="rounded-xl border border-white/5 bg-[#161B22] p-5 mb-4">

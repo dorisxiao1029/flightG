@@ -105,13 +105,28 @@
     "channel": {
       "type": "string",
       "enum": [
-        "api",
+        "chat",
         "phone",
+        "email",
+        "api",
         "sms",
         "whatsapp",
         "app"
       ],
-      "description": "Primary channel used to contact airline"
+      "description": "Current channel the agent is working on (progresses chat → phone → email as needed)"
+    },
+    "chosen_path": {
+      "type": "string",
+      "enum": [
+        "refund",
+        "rebook"
+      ],
+      "description": "Which mutually-exclusive DOT Part 260 path the passenger picked when the airline offered both."
+    },
+    "is_simulation": {
+      "type": "boolean",
+      "default": true,
+      "description": "True while no real agent dispatcher is wired up. Case progression is a client-side simulation for demonstration."
     },
     "has_airline_api": {
       "type": "boolean",

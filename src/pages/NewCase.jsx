@@ -72,6 +72,7 @@ export default function NewCase() {
       const caseNumber = `EV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
       const created = await base44.entities.FlightCase.create({
         ...flight,
+        case_number: caseNumber,
         airline_iata: airlineIata,
         airline_name: strategy.airline.name,
         ticket_price_usd: ticketPrice,
@@ -85,11 +86,12 @@ export default function NewCase() {
         dot_cash_value: strategy.dot_cash_value,
         airline_benefit_value: strategy.airline_benefit_value,
         negotiation_strategy: strategy.negotiation_script,
-        channel: strategy.preferred_channel,
+        channel: "chat", // agent always starts on chat, escalates from there
         has_airline_api: false,
         user_intent: intent,
         status: "analyzing",
-        current_step_label: "Analyzing disruption",
+        current_step_label: "Queued for agent dispatch",
+        is_simulation: true, // client-side simulation until backend dispatcher is wired
         fee_usd: FEE,
         fee_paid: true,
       });
