@@ -96,9 +96,14 @@ export function buildStrategy({
     channel: "phone",
   };
 
-  const controllable = !/(weather|air traffic control|atc|security)/i.test(
-    disruptionReason || ""
-  );
+  // Classification: any explicit controllable cause (mechanical / crew / staffing
+  // / maintenance / IT / scheduling) wins even when weather or ATC is also mentioned.
+  // Airlines routinely blame weather to escape voluntary duty, so if the passenger
+  // reports a mixed reason we assume the controllable component makes them liable.
+  const reason = (disruptionReason || "").toLowerCase();
+  const controllableCause = /(mechanical|crew|staffing|maintenance|equipment|technical|it issue|scheduling)/i.test(reason);
+  const uncontrollableCause = /(weather|air traffic control|atc|security)/i.test(reason);
+  const controllable = controllableCause || !uncontrollableCause;
   const significant = isSignificantDelay(delayMinutes) || disruptionType === "cancellation";
 
   const dotRights = [];
