@@ -145,7 +145,7 @@ export default function Settings() {
 
       <div className="text-center text-[11px] text-slate-600 mt-8">
         FlightGuard AI · v0.1 ·{" "}
-        <Link to="/" className="text-slate-500 hover:text-slate-300">
+        <Link to="/dashboard" className="text-slate-500 hover:text-slate-300">
           Back to dashboard
         </Link>
       </div>

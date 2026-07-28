@@ -117,7 +117,7 @@ export default function NewCase() {
   return (
     <div className="p-6 lg:p-8 max-w-2xl mx-auto">
       <button
-        onClick={() => (step === 1 ? navigate("/") : setStep(step - 1))}
+        onClick={() => (step === 1 ? navigate("/dashboard") : setStep(step - 1))}
         className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -136,7 +136,7 @@ export default function NewCase() {
 
       {step === 1 && (
         <Card title="Flight details" subtitle="Enter your US domestic flight.">
-          <FlightInfoForm onParsed={handleParsed} onCancel={() => navigate("/")} />
+          <FlightInfoForm onParsed={handleParsed} onCancel={() => navigate("/dashboard")} />
         </Card>
       )}
 

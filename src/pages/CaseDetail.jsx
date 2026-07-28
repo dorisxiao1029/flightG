@@ -172,7 +172,7 @@ export default function CaseDetail() {
   if (!caseItem) {
     return (
       <div className="p-8 text-center text-slate-500">
-        Case not found. <Link to="/" className="text-[#2F81F7]">Back</Link>
+        Case not found. <Link to="/dashboard" className="text-[#2F81F7]">Back</Link>
       </div>
     );
   }
@@ -181,7 +181,7 @@ export default function CaseDetail() {
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
-      <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 mb-5 transition-colors">
+      <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 mb-5 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Dashboard
       </Link>

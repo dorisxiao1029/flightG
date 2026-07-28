@@ -13,6 +13,7 @@ import NewCase from '@/pages/NewCase';
 import CaseDetail from '@/pages/CaseDetail';
 import CaseHistory from '@/pages/CaseHistory';
 import Settings from '@/pages/Settings';
+import Landing from '@/pages/Landing';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -40,9 +41,9 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-    {/* Add your page Route elements here */}
+    <Route path="/" element={<Landing />} />
     <Route element={<Layout />}>
-      <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Home />} />
       <Route path="/new" element={<NewCase />} />
       <Route path="/case/:id" element={<CaseDetail />} />
       <Route path="/history" element={<CaseHistory />} />

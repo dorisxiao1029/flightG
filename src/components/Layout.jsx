@@ -4,7 +4,7 @@ import { Shield, LayoutDashboard, PlusCircle, History, Settings } from "lucide-r
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Dashboard", path: "/", icon: LayoutDashboard },
+  { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { label: "New Case", path: "/new", icon: PlusCircle },
   { label: "History", path: "/history", icon: History },
 ];
