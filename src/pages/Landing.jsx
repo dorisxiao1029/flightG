@@ -53,8 +53,8 @@ const HOW_IT_WORKS = [
   },
   {
     n: "02",
-    title: "AI negotiates on your behalf",
-    desc: "The agent cites the exact DOT regulation, works the airline via phone or API, and pushes for every dollar you're owed.",
+    title: "AI works every channel the airline exposes",
+    desc: "Reads your case, cites the exact federal regulation, then picks the channel that converts — live chat, phone, or email — and negotiates through every reply on your behalf.",
   },
   {
     n: "03",
@@ -167,17 +167,18 @@ export default function Landing() {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-[11px] text-slate-400 mb-5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                U.S. flights · Autonomous agent, on the line 24/7
+                U.S. flights · AI on chat, phone, and email — 24/7
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.05]">
-                Skip the airline.{" "}
-                <span className="text-[#2F81F7]">Keep the refund.</span>
+                AI works the airline.{" "}
+                <span className="text-[#2F81F7]">You keep the refund.</span>
               </h1>
               <p className="mt-6 text-base sm:text-lg text-slate-400 leading-relaxed max-w-xl">
-                No 47-minute hold. No customer-service scripts. No "please email us the
-                receipts." An AI agent handles the entire airline ordeal on your behalf —
-                the call, the paperwork, the negotiation. Federal law says you're owed a
-                cash refund; we just make sure you actually get it.
+                We read your specific case, draft a negotiation plan for your airline and
+                the exact regulation you can cite, then work whichever channel converts
+                fastest — live chat, phone, or email — replying, escalating, and
+                negotiating on your behalf. You never draft a message. You never hold
+                the line. You get the cash refund federal law says you're owed.
               </p>
               <div className="mt-6 text-xs text-slate-600">
                 $29 flat per case · Charged only when the agent starts · No commission on your refund
