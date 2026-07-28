@@ -6,10 +6,11 @@ import {
   Zap,
   Scale,
   Radio,
+  MessageSquare,
   Lock,
   Phone,
   FileText,
-  DollarSign,
+  Hourglass,
   Plane,
   XCircle,
   HelpCircle,
@@ -53,8 +54,8 @@ const HOW_IT_WORKS = [
   },
   {
     n: "02",
-    title: "AI works every channel the airline exposes",
-    desc: "Reads your case, cites the exact federal regulation, then picks the channel that converts — live chat, phone, or email — and negotiates through every reply on your behalf.",
+    title: "We work every channel the airline exposes",
+    desc: "Read your case, cite the exact federal regulation, then pick the channel that converts — live chat, phone, or email — and negotiate through every reply on your behalf.",
   },
   {
     n: "03",
@@ -167,94 +168,113 @@ export default function Landing() {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-[11px] text-slate-400 mb-5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                U.S. flights · AI on chat, phone, and email — 24/7
+                U.S. flights · Chat, phone, and email — around the clock
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.05]">
-                AI works the airline.{" "}
-                <span className="text-[#2F81F7]">You keep the refund.</span>
+                We handle the airline.{" "}
+                <span className="text-[#2F81F7]">You just decide.</span>
               </h1>
               <p className="mt-6 text-base sm:text-lg text-slate-400 leading-relaxed max-w-xl">
-                We read your specific case, draft a negotiation plan for your airline and
-                the exact regulation you can cite, then work whichever channel converts
-                fastest — live chat, phone, or email — replying, escalating, and
-                negotiating on your behalf. You never draft a message. You never hold
-                the line. You get the cash refund federal law says you're owed.
+                We read your specific case, draft a negotiation plan for your airline, and
+                work every channel that gets a response — live chat, phone, email —
+                replying and escalating on your behalf. Your only job is approving what the
+                airline offers back. Federal law says you're owed a cash refund; we make
+                sure you actually get it.
               </p>
               <div className="mt-6 text-xs text-slate-600">
-                $29 flat per case · Charged only when the agent starts · No commission on your refund
+                $29 flat per case · Charged only when we start working · No commission on your refund
               </div>
             </div>
 
-            {/* Right: action card — the CTA IS the first step */}
-            <div className="rounded-2xl border border-white/10 bg-[#161B22] p-6 sm:p-7 shadow-2xl shadow-black/40">
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
-                What happened to your flight?
+            {/* Right: action card + airlines marquee */}
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-white/10 bg-[#161B22] p-6 sm:p-7 shadow-2xl shadow-black/40">
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
+                  What happened to your flight?
+                </div>
+                <div className="space-y-2.5">
+                  <DisruptionChoice
+                    icon={Zap}
+                    label="My flight was delayed"
+                    desc="3+ hours late is where refunds unlock."
+                    onClick={() => navigate("/new?disruption=delay")}
+                  />
+                  <DisruptionChoice
+                    icon={XCircle}
+                    label="My flight was canceled"
+                    desc="You're owed a full cash refund, always."
+                    onClick={() => navigate("/new?disruption=cancellation")}
+                  />
+                  <DisruptionChoice
+                    icon={HelpCircle}
+                    label="Something else"
+                    desc="Diverted, denied boarding, tarmac stuck…"
+                    onClick={() => navigate("/new?disruption=diversion")}
+                  />
+                </div>
+                <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-500">
+                  <span>Free to check what you're owed</span>
+                  <span className="text-emerald-400">✓ No signup required</span>
+                </div>
               </div>
-              <div className="space-y-2.5">
-                <DisruptionChoice
-                  icon={Zap}
-                  label="My flight was delayed"
-                  desc="3+ hours late is where refunds unlock."
-                  onClick={() => navigate("/new?disruption=delay")}
-                />
-                <DisruptionChoice
-                  icon={XCircle}
-                  label="My flight was canceled"
-                  desc="You're owed a full cash refund, always."
-                  onClick={() => navigate("/new?disruption=cancellation")}
-                />
-                <DisruptionChoice
-                  icon={HelpCircle}
-                  label="Something else"
-                  desc="Diverted, denied boarding, tarmac stuck…"
-                  onClick={() => navigate("/new?disruption=diversion")}
-                />
-              </div>
-              <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Free to check what you're owed</span>
-                <span className="text-emerald-400">✓ No signup required</span>
-              </div>
+
+              <AirlineMarquee />
             </div>
           </div>
         </div>
 
-        {/* Trust stats row — effort-first, refund last */}
-        <div className="relative max-w-5xl mx-auto px-5 pb-16 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Trust stats — what YOU don't have to do */}
+        <div className="relative max-w-5xl mx-auto px-5 pb-16 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <TrustStat icon={Phone} value="0 calls" label="You never dial the airline" />
-          <TrustStat icon={Radio} value="24 / 7" label="Agent works while you sleep" />
-          <TrustStat icon={Lock} value="Full audit trail" label="Every step, tamper-proof" />
-          <TrustStat icon={DollarSign} value="Up to $700" label="Federal refund cap" />
+          <TrustStat icon={MessageSquare} value="Every message logged" label="Chat, phone, email transcripts stored & searchable" />
+          <TrustStat icon={Radio} value="Live progress" label="Watch each airline reply land in real time" />
         </div>
       </section>
 
-      {/* Problem framing */}
+      {/* Problem framing — 3 pain points + solution callout */}
       <section className="border-t border-white/5">
-        <div className="max-w-4xl mx-auto px-5 py-16 lg:py-24">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-10">
-            <ProblemTile
+        <div className="max-w-5xl mx-auto px-5 py-16 lg:py-24">
+          <SectionHead
+            eyebrow="The math"
+            title="What claiming a refund costs you today."
+            sub="Every minute is unpaid work you do while the airline hopes you give up."
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
+            <BigPainTile
               icon={Phone}
-              label="Airline hold time"
               value="47 min"
-              tone="red"
+              label="Airline phone hold"
+              detail="Average wait for a customer-service agent on a disruption day."
             />
-            <ProblemTile
+            <BigPainTile
               icon={FileText}
-              label="Filing the complaint yourself"
               value="30 min"
-              tone="red"
+              label="Drafting complaints"
+              detail="Emails, receipts, DOT form, cover letter — before anyone reads it."
             />
-            <ProblemTile
-              icon={Zap}
-              label="FlightGuard"
-              value="30 sec"
-              tone="emerald"
+            <BigPainTile
+              icon={Hourglass}
+              value="21 days"
+              label="Follow-up back-and-forth"
+              detail="Typical time to close a claim if the airline pushes back."
             />
           </div>
-          <p className="text-center text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
-            Federal law says you're owed a refund.{" "}
-            <span className="text-white">The airline hopes you're too busy to claim it.</span>{" "}
-            FlightGuard closes that gap — automatically.
-          </p>
+
+          <div className="mt-6 rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-5">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
+              <Zap className="w-6 h-6" />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <div className="text-xs font-semibold text-emerald-400 uppercase tracking-widest">With FlightGuard</div>
+              <div className="text-2xl sm:text-3xl font-bold text-white mt-1">
+                30 seconds of your time. Ever.
+              </div>
+              <div className="text-sm text-slate-400 mt-1">
+                Tell us what happened. We do the rest — and only ping you when there's a decision to make.
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -304,23 +324,6 @@ export default function Landing() {
             })}
           </div>
 
-          {/* Airlines chips */}
-          <div className="mt-10 rounded-xl border border-white/5 bg-[#0F141B] p-6">
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
-              Airlines we handle
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {AIRLINES.map((a) => (
-                <span
-                  key={a.iata}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs"
-                >
-                  <span className="font-mono text-[#2F81F7] font-semibold">{a.iata}</span>
-                  <span className="text-slate-300">{a.name}</span>
-                </span>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
@@ -438,17 +441,57 @@ function TrustStat({ icon: Icon, value, label }) {
   );
 }
 
-function ProblemTile({ icon: Icon, label, value, tone }) {
-  const colors = tone === "emerald"
-    ? { bar: "bg-emerald-500/15 text-emerald-400", text: "text-emerald-400", border: "border-emerald-500/20" }
-    : { bar: "bg-red-500/10 text-red-400", text: "text-slate-500 line-through decoration-red-400/60", border: "border-white/5" };
+function BigPainTile({ icon: Icon, value, label, detail }) {
   return (
-    <div className={cn("rounded-xl border p-4", colors.border, tone === "emerald" ? "bg-emerald-500/[0.04]" : "bg-[#161B22]")}>
-      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-3", colors.bar)}>
-        <Icon className="w-4 h-4" />
+    <div className="rounded-2xl border border-red-500/15 bg-[#161B22] p-6 relative overflow-hidden">
+      <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-red-500/[0.04] blur-2xl" />
+      <div className="relative">
+        <div className="w-10 h-10 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center mb-4">
+          <Icon className="w-5 h-5" />
+        </div>
+        <div className="text-3xl sm:text-4xl font-bold text-white font-mono">{value}</div>
+        <div className="text-sm font-semibold text-slate-300 mt-1">{label}</div>
+        <div className="text-xs text-slate-500 mt-2 leading-relaxed">{detail}</div>
       </div>
-      <div className={cn("text-xl font-bold font-mono", tone === "emerald" ? "text-emerald-400" : "text-slate-400")}>{value}</div>
-      <div className="text-[11px] text-slate-500 mt-0.5">{label}</div>
+    </div>
+  );
+}
+
+function AirlineMarquee() {
+  const doubled = [...AIRLINES, ...AIRLINES];
+  return (
+    <div className="rounded-2xl border border-white/5 bg-[#0F141B] px-4 py-3.5 overflow-hidden">
+      <div className="flex items-center gap-3">
+        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest shrink-0">
+          Airlines we handle
+        </span>
+        <div className="relative flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+          <div className="flex gap-2 w-max fg-marquee">
+            {doubled.map((a, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.03] border border-white/5 text-[11px] shrink-0"
+              >
+                <span className="font-mono text-[#2F81F7] font-semibold">{a.iata}</span>
+                <span className="text-slate-300">{a.name}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @keyframes fg-marquee {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        .fg-marquee {
+          animation: fg-marquee 28s linear infinite;
+        }
+        .fg-marquee:hover { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) {
+          .fg-marquee { animation: none; }
+        }
+      `}</style>
     </div>
   );
 }
