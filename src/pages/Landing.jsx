@@ -143,7 +143,7 @@ export default function Landing() {
               FAQ
             </a>
             <Link
-              to="/dashboard"
+              to="/login"
               className="ml-2 px-3 py-1.5 text-sm text-slate-300 hover:text-white transition-colors"
             >
               Sign in
@@ -396,7 +396,7 @@ export default function Landing() {
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-slate-400 transition-colors">Privacy</a>
             <a href="#" className="hover:text-slate-400 transition-colors">Terms</a>
-            <Link to="/dashboard" className="hover:text-slate-400 transition-colors">Sign in</Link>
+            <Link to="/login" className="hover:text-slate-400 transition-colors">Sign in</Link>
           </div>
         </div>
       </footer>

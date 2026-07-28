@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Target, DollarSign, Plane, Bed, Shield, Check, TrendingUp, Scale } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -19,25 +19,45 @@ const intents = [
 const FEE = 29;
 
 const VALID_DISRUPTIONS = new Set(["delay", "cancellation", "diversion"]);
+const PENDING_CASE_KEY = "envoy_pending_case";
+
+// Restore any state stashed before a login redirect. Consumed exactly once
+// so returning to /new fresh later doesn't accidentally re-hydrate stale data.
+const readPendingCase = () => {
+  try {
+    const raw = sessionStorage.getItem(PENDING_CASE_KEY);
+    if (!raw) return null;
+    sessionStorage.removeItem(PENDING_CASE_KEY);
+    return JSON.parse(raw);
+  } catch {
+    sessionStorage.removeItem(PENDING_CASE_KEY);
+    return null;
+  }
+};
 
 export default function NewCase() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { isAuthenticated, navigateToLogin } = useAuth();
-  const initialDisruption = (() => {
+  // Read pending state synchronously on first render so initial useState
+  // seeds don't paint an empty form before the effect runs.
+  const pendingRef = useRef(readPendingCase());
+  const pending = pendingRef.current;
+  const initialDisruption = pending?.disruptionType ?? (() => {
     const q = searchParams.get("disruption");
     return q && VALID_DISRUPTIONS.has(q) ? q : "delay";
   })();
-  const [step, setStep] = useState(1);
-  const [flight, setFlight] = useState(null);
+  const [step, setStep] = useState(pending?.step ?? 1);
+  const [flight, setFlight] = useState(pending?.flight ?? null);
   const [disruptionType, setDisruptionType] = useState(initialDisruption);
-  const [delayMinutes, setDelayMinutes] = useState(180);
-  const [disruptionReason, setDisruptionReason] = useState("");
-  const [ticketPrice, setTicketPrice] = useState(350);
-  const [intent, setIntent] = useState("both");
-  const [strategy, setStrategy] = useState(null);
+  const [delayMinutes, setDelayMinutes] = useState(pending?.delayMinutes ?? 180);
+  const [disruptionReason, setDisruptionReason] = useState(pending?.disruptionReason ?? "");
+  const [ticketPrice, setTicketPrice] = useState(pending?.ticketPrice ?? 350);
+  const [intent, setIntent] = useState(pending?.intent ?? "both");
+  const [strategy, setStrategy] = useState(pending?.strategy ?? null);
   const [creating, setCreating] = useState(false);
+  const [autoLaunched, setAutoLaunched] = useState(false);
 
   const airlineIata = flight?.flight_number?.slice(0, 2).toUpperCase() || "";
 
@@ -58,11 +78,34 @@ export default function NewCase() {
     setStep(2);
   };
 
+  // After login → we returned to /new with pending state re-hydrated. If the
+  // user was mid-Launch and now has a session, fire the create for them so
+  // they don't have to click twice.
+  useEffect(() => {
+    if (autoLaunched) return;
+    if (!pending?.awaitingLogin) return;
+    if (!isAuthenticated) return;
+    if (!strategy || !flight) return;
+    setAutoLaunched(true);
+    handleCreate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, strategy, flight]);
+
   const handleCreate = async () => {
     if (!isAuthenticated) {
+      // Persist everything the user filled BEFORE the redirect. Login does a
+      // full-page navigation, which wipes React state — sessionStorage
+      // survives same-tab navigations so we can re-hydrate on return.
+      try {
+        sessionStorage.setItem(PENDING_CASE_KEY, JSON.stringify({
+          flight, disruptionType, delayMinutes, disruptionReason,
+          ticketPrice, intent, strategy, step,
+          awaitingLogin: true,
+        }));
+      } catch { /* quota errors — best-effort */ }
       toast({
         title: "Sign in to claim your benefits",
-        description: "We only ask for login when the agent is about to act on your behalf.",
+        description: "Your case is saved — you'll pick up right where you left off.",
       });
       navigateToLogin();
       return;
