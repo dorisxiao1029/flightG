@@ -271,8 +271,9 @@ export default function NewCase() {
             {/* Max benefit */}
             <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] p-4 mb-4 flex items-center justify-between">
               <div>
-                <div className="text-xs text-slate-500">Total benefit the agent will pursue</div>
-                <div className="text-2xl font-bold text-emerald-400 font-mono">${strategy.max_benefit_usd}</div>
+                <div className="text-xs text-slate-500">Best outcome the agent will pursue</div>
+                <div className="text-2xl font-bold text-emerald-400 font-mono">up to ${strategy.max_benefit_usd}</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Depends on which path you accept below.</div>
               </div>
               <TrendingUp className="w-6 h-6 text-emerald-400/50" />
             </div>
@@ -289,22 +290,52 @@ export default function NewCase() {
               </span>
             </div>
 
-            {/* Claims breakdown */}
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Claims breakdown</div>
-            <div className="space-y-1.5 mb-4">
-              {strategy.recommended_claims.map((claim, i) => (
-                <div key={i} className="flex items-start gap-2.5 rounded-lg bg-white/[0.02] border border-white/5 p-3">
-                  <Check className="w-3.5 h-3.5 text-[#2F81F7] shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-slate-200 font-medium">{claim.right}</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">{claim.basis}</div>
+            {/* Two mutually-exclusive paths */}
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Choose one path (mutually exclusive)</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
+              {(strategy.paths || []).map((p) => (
+                <div key={p.key} className="rounded-lg border border-white/10 bg-white/[0.02] p-3.5">
+                  <div className="flex items-baseline justify-between mb-1.5">
+                    <div className="text-sm font-semibold text-white">{p.label}</div>
+                    <div className="text-sm font-mono font-semibold text-emerald-400">${p.total_value}</div>
                   </div>
-                  {claim.value > 0 && (
-                    <span className="text-sm font-mono font-semibold text-emerald-400 shrink-0">${claim.value}</span>
+                  <div className="text-[11px] text-slate-500 leading-relaxed mb-2">{p.summary}</div>
+                  {p.primary_claim && (
+                    <div className="text-[11px] text-slate-400">
+                      <span className="text-slate-500">Basis:</span> {p.primary_claim.basis}
+                    </div>
+                  )}
+                  {p.bonus && (
+                    <div className="text-[11px] text-emerald-400 mt-1.5">
+                      + {p.bonus.right} (${p.bonus.value})
+                    </div>
                   )}
                 </div>
               ))}
             </div>
+
+            {/* Add-ons */}
+            {strategy.add_ons?.length > 0 && (
+              <>
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  Add-ons — apply to either path
+                </div>
+                <div className="space-y-1.5 mb-4">
+                  {strategy.add_ons.map((a, i) => (
+                    <div key={i} className="flex items-start gap-2.5 rounded-lg bg-white/[0.02] border border-white/5 p-3">
+                      <Check className="w-3.5 h-3.5 text-[#2F81F7] shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-slate-200 font-medium">{a.right}</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">{a.basis}</div>
+                      </div>
+                      {a.value > 0 && (
+                        <span className="text-sm font-mono font-semibold text-emerald-400 shrink-0">${a.value}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
 
             {/* Negotiation plan */}
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Agent negotiation plan</div>
@@ -317,8 +348,22 @@ export default function NewCase() {
               ))}
             </div>
 
+            {/* Channel plan */}
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Channel plan</div>
+            <div className="space-y-1.5 mb-4">
+              {(strategy.channel_plan || []).map((c) => (
+                <div key={c.step} className="flex gap-2.5 items-start rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
+                  <span className="text-[10px] font-mono text-[#2F81F7] shrink-0 mt-0.5">{c.step}.</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-200 font-medium capitalize">{c.channel}</div>
+                    <div className="text-[11px] text-slate-500 leading-relaxed">{c.note}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <div className="text-xs text-slate-600 mb-4">
-              Channel: <span className="text-slate-400 capitalize">{strategy.preferred_channel}</span> · Airline: {strategy.airline.name}
+              Airline: {strategy.airline.name}
             </div>
           </Card>
 

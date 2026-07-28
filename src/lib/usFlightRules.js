@@ -106,86 +106,91 @@ export function buildStrategy({
   const controllable = controllableCause || !uncontrollableCause;
   const significant = isSignificantDelay(delayMinutes) || disruptionType === "cancellation";
 
-  const dotRights = [];
-  let dotCashValue = 0;
+  // ── DOT Part 260: refund and rebook are ALTERNATIVES, not additive ──
+  // If the passenger accepts the airline's rebooking, they forfeit the
+  // refund right (and vice versa). We model this as two mutually-exclusive
+  // paths and let the user pick after seeing what the airline offers back.
 
-  if (disruptionType === "cancellation") {
-    dotRights.push({
+  const refundValue = ticketPriceUsd || 0;
+  const refundPath = {
+    key: "refund",
+    label: "Take the cash refund",
+    summary: "You walk away with cash. You arrange onward travel yourself (or don't need to anymore).",
+    primary_claim: significant || disruptionType === "cancellation" ? {
       right: "Full cash refund",
-      basis: "DOT 14 CFR Part 260: cancelled or significantly changed flight → passenger entitled to full cash refund of unused segments.",
-      value: ticketPriceUsd || 0,
-      type: "cash",
-    });
-    dotCashValue = ticketPriceUsd || 0;
-  } else if (significant) {
-    dotRights.push({
-      right: "Full cash refund (significant delay)",
-      basis: "DOT policy: 3+ hour domestic delay = significant change → full cash refund right if passenger declines rebooking.",
-      value: ticketPriceUsd || 0,
-      type: "cash",
-    });
-    dotCashValue = ticketPriceUsd || 0;
-  }
+      basis: disruptionType === "cancellation"
+        ? "DOT 14 CFR Part 260: cancelled flight → cash refund of unused segments."
+        : "DOT 14 CFR Part 260: 3+ hr domestic delay → cash refund if passenger declines rebooking.",
+      value: refundValue,
+    } : null,
+    value: refundValue,
+  };
 
-  if (delayMinutes >= 180 && controllable) {
-    dotRights.push({
-      right: "Tarmac delay rule violation (if applicable)",
-      basis: "DOT 14 CFR 259: tarmac delays over 3 hours (domestic) trigger penalties payable to passengers.",
-      value: 0,
-      type: "investigation",
-    });
-  }
+  const rebookPath = {
+    key: "rebook",
+    label: "Rebook on the earliest flight",
+    summary: `You still get to ${airline.name === "Unknown Airline" ? "your destination" : "your destination"}. Agent pushes for partner/interline routing if own metal isn't available soon enough.`,
+    primary_claim: {
+      right: "Rebooking on earliest available flight",
+      basis: airline.partner_rebooking
+        ? `${airline.name} interline: agent forces partner rebooking (e.g. Delta/UA/AS) if AA's own next flight is too late.`
+        : `${airline.name} does not interline widely — agent must push for the next own-metal flight or refund fallback.`,
+      value: refundValue, // you preserve ticket value by still flying
+    },
+    value: refundValue,
+  };
 
-  const airlineOffer = [];
-  let airlineValue = 0;
-
+  // Goodwill credit is offered on top of REBOOK (airlines don't hand out
+  // credit AND cash refund on the same ticket in practice).
   if (airline.typical_credit > 0 && (significant || controllable)) {
-    airlineOffer.push({
+    rebookPath.value += airline.typical_credit;
+    rebookPath.bonus = {
       right: `${airline.name} travel credit`,
-      basis: airline.policy,
+      basis: `${airline.policy} — ask as goodwill when accepting a rebooking.`,
       value: airline.typical_credit,
-      type: "credit",
-    });
-    airlineValue = airline.typical_credit;
+    };
   }
 
+  // ── Add-ons: apply to EITHER path ──
+  // These are separate airline duties triggered by the disruption itself,
+  // not by the passenger's refund/rebook choice.
+  const addOns = [];
   if (controllable) {
     if (delayMinutes >= 180 || disruptionType === "cancellation") {
-      airlineOffer.push({
+      addOns.push({
         right: "Meal voucher",
         basis: `${airline.name} voluntary policy: meals for controllable delays 3+ hrs.`,
         value: 15,
-        type: "voucher",
       });
     }
     if (delayMinutes >= 360 || disruptionType === "cancellation") {
-      airlineOffer.push({
-        right: "Hotel accommodation",
-        basis: `${airline.name} voluntary policy: overnight accommodation for controllable disruptions.`,
+      addOns.push({
+        right: "Hotel accommodation (if overnight)",
+        basis: `${airline.name} voluntary policy: overnight lodging for controllable disruptions.`,
         value: 120,
-        type: "accommodation",
       });
     }
   }
+  const addOnsValue = addOns.reduce((s, a) => s + a.value, 0);
 
-  if (airline.partner_rebooking) {
-    airlineOffer.push({
-      right: "Rebook on partner airline",
-      basis: `${airline.name} interline agreement — agent should push for partner rebooking if own flights unavailable.`,
-      value: 0,
-      type: "rebooking",
-    });
-  }
+  refundPath.total_value = refundPath.value + addOnsValue;
+  rebookPath.total_value = rebookPath.value + addOnsValue;
 
-  const allClaims = [...dotRights, ...airlineOffer];
-  const totalValue = allClaims.reduce((sum, c) => sum + (c.value || 0), 0);
+  // "Max benefit" is the better of the two paths (in cash-equivalent terms).
+  const maxBenefit = Math.max(refundPath.total_value, rebookPath.total_value);
 
-  const recommendedClaims = [];
-  const refundClaim = dotRights.find((c) => c.type === "cash");
-  if (refundClaim) recommendedClaims.push(refundClaim);
-  recommendedClaims.push(...airlineOffer);
+  // ── Dynamic channel plan ──
+  // Try chat first (fastest, free, transcript comes with the widget).
+  // Escalate to phone if chat queues > 10 min or hands off to a human that
+  // isn't picking up. Email is the async paper trail we file in parallel
+  // when a supervisor is needed.
+  const channelPlan = [
+    { step: 1, channel: "chat", note: `Start on ${airline.name}'s live chat widget. Measure queue depth + estimated wait.` },
+    { step: 2, channel: "phone", note: `Escalate to ${airline.name} phone line (${airline.channel === "phone" ? "known best channel for this carrier" : "if chat wait exceeds 10 min or bot cannot process refund"}).` },
+    { step: 3, channel: "email", note: `File a formal complaint email in parallel — creates an audit trail even if live channels succeed.` },
+  ];
 
-  const negotiationScript = buildScript(airline, disruptionType, delayMinutes, controllable, refundClaim, ticketPriceUsd);
+  const negotiationScript = buildScript(airline, disruptionType, delayMinutes, controllable, refundValue, addOns);
 
   return {
     airline,
@@ -194,46 +199,50 @@ export function buildStrategy({
     applicable_regulation: disruptionType === "cancellation"
       ? "DOT Part 260 (Refunds)"
       : "DOT Part 259 (Tarmac) + Part 260 (Refunds)",
-    dot_rights: dotRights,
-    airline_offers: airlineOffer,
-    recommended_claims: recommendedClaims,
-    max_benefit_usd: totalValue,
-    dot_cash_value: dotCashValue,
-    airline_benefit_value: airlineValue,
+    paths: [refundPath, rebookPath],
+    add_ons: addOns,
+    add_ons_value: addOnsValue,
+    max_benefit_usd: maxBenefit,
+    dot_cash_value: refundPath.value,
+    airline_benefit_value: rebookPath.bonus?.value || 0,
     negotiation_script: negotiationScript,
-    preferred_channel: airline.channel,
+    channel_plan: channelPlan,
+    preferred_channel: "chat",
     has_api: false,
+    // Legacy shape kept for downstream consumers that read recommended_claims / dot_rights / airline_offers.
+    recommended_claims: [
+      refundPath.primary_claim,
+      rebookPath.primary_claim,
+      rebookPath.bonus,
+      ...addOns,
+    ].filter(Boolean),
+    dot_rights: refundPath.primary_claim ? [refundPath.primary_claim] : [],
+    airline_offers: [rebookPath.primary_claim, rebookPath.bonus, ...addOns].filter(Boolean),
   };
 }
 
-function buildScript(airline, disruptionType, delay, controllable, refundClaim, ticketPrice) {
+function buildScript(airline, disruptionType, delay, controllable, refundValue, addOns) {
   const parts = [];
 
-  parts.push(`Calling ${airline.name} regarding flight disruption (${disruptionType}${delay ? `, ${delay} min delay` : ""}).`);
+  parts.push(`Open ${airline.name} live chat. Cite flight number + confirmation, note the ${disruptionType}${delay ? ` (${delay} min delay)` : ""}. Ask for estimated wait to a human agent.`);
 
-  if (refundClaim) {
-    parts.push(
-      `Primary ask: invoke DOT Part 260 right to a full cash refund of $${ticketPrice} for the ${disruptionType === "cancellation" ? "cancelled" : "significantly delayed"} flight. ` +
-      `If the agent offers only travel credit, politely insist on cash per DOT regulations.`
-    );
-  }
+  parts.push(
+    `Frame the choice for the passenger: (A) accept rebooking on next available seat — including ${airline.partner_rebooking ? "partner/interline carriers" : "next own-metal flight"} — or (B) invoke DOT Part 260 for a full cash refund of $${refundValue}. These are mutually exclusive.`
+  );
 
-  if (airline.partner_rebooking) {
-    parts.push(
-      `Secondary ask: rebook on the earliest available flight, including partner/interline carriers — not just ${airline.name} metal.`
-    );
-  }
+  parts.push(
+    `Whichever the passenger picks, DO NOT let the airline substitute travel credit for a cash refund if refund was chosen. Insist on cash per DOT 14 CFR Part 260.`
+  );
 
-  if (controllable && (delay >= 180 || disruptionType === "cancellation")) {
+  if (addOns.length > 0) {
     parts.push(
-      `Also request meal vouchers (controllable delay) and hotel accommodation if overnight. ` +
-      `These are separate from the refund and should not be waived.`
+      `Regardless of path: request ${addOns.map(a => a.right.toLowerCase()).join(" and ")} — these are separate airline duties triggered by the disruption itself, not the refund/rebook choice.`
     );
   }
 
   if (airline.typical_credit > 0) {
     parts.push(
-      `Additional ask: request ${airline.name}'s voluntary travel credit (~$${airline.typical_credit}) as goodwill compensation on top of the refund.`
+      `If rebooking path is chosen: also request ${airline.name}'s ~$${airline.typical_credit} goodwill travel credit. Airlines routinely add this to soften a rebook.`
     );
   }
 
