@@ -167,16 +167,17 @@ export default function Landing() {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] text-[11px] text-slate-400 mb-5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                U.S. flights · Federal refund rights, enforced by AI
+                U.S. flights · Autonomous agent, on the line 24/7
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.05]">
-                Delayed or canceled flight?{" "}
-                <span className="text-[#2F81F7]">Get up to $700.</span>
+                Skip the airline.{" "}
+                <span className="text-[#2F81F7]">Keep the refund.</span>
               </h1>
               <p className="mt-6 text-base sm:text-lg text-slate-400 leading-relaxed max-w-xl">
-                U.S. federal law says the airline owes you a refund — cash, not vouchers —
-                when your flight is disrupted. Our AI agent negotiates it for you. You don't
-                touch a phone.
+                No 47-minute hold. No customer-service scripts. No "please email us the
+                receipts." An AI agent handles the entire airline ordeal on your behalf —
+                the call, the paperwork, the negotiation. Federal law says you're owed a
+                cash refund; we just make sure you actually get it.
               </p>
               <div className="mt-6 text-xs text-slate-600">
                 $29 flat per case · Charged only when the agent starts · No commission on your refund
@@ -216,12 +217,12 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Trust stats row */}
+        {/* Trust stats row — effort-first, refund last */}
         <div className="relative max-w-5xl mx-auto px-5 pb-16 grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <TrustStat icon={DollarSign} value="Up to $700" label="Per passenger" />
-          <TrustStat icon={Scale} value="8 airlines" label="U.S. coverage" />
-          <TrustStat icon={Lock} value="Tamper-proof" label="Evidence chain" />
-          <TrustStat icon={Radio} value="Real-time" label="Case updates" />
+          <TrustStat icon={Phone} value="0 calls" label="You never dial the airline" />
+          <TrustStat icon={Radio} value="24 / 7" label="Agent works while you sleep" />
+          <TrustStat icon={Lock} value="Full audit trail" label="Every step, tamper-proof" />
+          <TrustStat icon={DollarSign} value="Up to $700" label="Federal refund cap" />
         </div>
       </section>
 
