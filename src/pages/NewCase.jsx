@@ -69,7 +69,7 @@ export default function NewCase() {
     }
     setCreating(true);
     try {
-      const caseNumber = `FG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const caseNumber = `EV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
       const created = await base44.entities.FlightCase.create({
         ...flight,
         airline_iata: airlineIata,

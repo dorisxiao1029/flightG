@@ -79,7 +79,7 @@ export default function CaseDetail() {
         log: {
           direction: "outbound",
           channel: channel,
-          sender: "FlightGuard Agent",
+          sender: "Envoy",
           content: strategy[0] || `Contacting ${c.airline_name || "airline"} regarding flight ${c.flight_number} (${c.origin}→${c.destination}). The passenger experienced a ${c.disruption_type}.`,
         },
       },

@@ -128,8 +128,8 @@ export default function Landing() {
               <Shield className="w-4 h-4 text-white" strokeWidth={2.5} />
             </div>
             <div className="leading-tight">
-              <div className="text-white font-semibold text-sm tracking-tight">FlightGuard</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-widest">AI Agent</div>
+              <div className="text-white font-semibold text-sm tracking-tight">Envoy</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-widest">Passenger Advocate</div>
             </div>
           </Link>
           <nav className="flex items-center gap-1">
@@ -175,11 +175,12 @@ export default function Landing() {
                 <span className="text-[#2F81F7]">You just decide.</span>
               </h1>
               <p className="mt-6 text-base sm:text-lg text-slate-400 leading-relaxed max-w-xl">
-                We read your specific case, draft a negotiation plan for your airline, and
-                work every channel that gets a response — live chat, phone, email —
-                replying and escalating on your behalf. Your only job is approving what the
-                airline offers back. Federal law says you're owed a cash refund; we make
-                sure you actually get it.
+                Thirty seconds to hand us the case — flight, what happened, what you
+                want. From that moment on, every hour we spend on the airline is an hour
+                you get back. Take the meeting. Catch your connection. Put the kids to
+                bed. We're the ones on the calls, the chats, the emails, and the
+                47-minute holds — and we only interrupt you when there's a decision
+                only you can make.
               </p>
               <div className="mt-6 text-xs text-slate-600">
                 $29 flat per case · Charged only when we start working · No commission on your refund
@@ -266,7 +267,7 @@ export default function Landing() {
               <Zap className="w-6 h-6" />
             </div>
             <div className="flex-1 text-center sm:text-left">
-              <div className="text-xs font-semibold text-emerald-400 uppercase tracking-widest">With FlightGuard</div>
+              <div className="text-xs font-semibold text-emerald-400 uppercase tracking-widest">With Envoy</div>
               <div className="text-2xl sm:text-3xl font-bold text-white mt-1">
                 30 seconds of your time. Ever.
               </div>
@@ -331,7 +332,7 @@ export default function Landing() {
       <section className="border-t border-white/5">
         <div className="max-w-6xl mx-auto px-5 py-16 lg:py-24">
           <SectionHead
-            eyebrow="Why FlightGuard"
+            eyebrow="Why Envoy"
             title="What makes it different from a template."
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
@@ -390,7 +391,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-5 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
           <div className="flex items-center gap-2">
             <Shield className="w-3.5 h-3.5" />
-            © 2026 FlightGuard AI · U.S. domestic flights only
+            © 2026 Envoy · U.S. domestic flights only
           </div>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-slate-400 transition-colors">Privacy</a>

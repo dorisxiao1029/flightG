@@ -13,7 +13,7 @@ const CABIN_OPTIONS = [
   { value: "first", label: "First" },
 ];
 
-const PREF_KEY = "flightguard_prefs";
+const PREF_KEY = "envoy_prefs";
 
 const loadPrefs = () => {
   try {
@@ -144,7 +144,7 @@ export default function Settings() {
       </Section>
 
       <div className="text-center text-[11px] text-slate-600 mt-8">
-        FlightGuard AI · v0.1 ·{" "}
+        Envoy · v0.1 ·{" "}
         <Link to="/dashboard" className="text-slate-500 hover:text-slate-300">
           Back to dashboard
         </Link>

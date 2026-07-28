@@ -1,5 +1,5 @@
 {
-  "name": "飞航卫士",
+  "name": "Envoy",
   "site": {
     "installCommand": "npm install",
     "buildCommand": "npm run build",

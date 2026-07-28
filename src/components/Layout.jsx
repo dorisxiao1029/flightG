@@ -21,8 +21,8 @@ export default function Layout() {
             <Shield className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
           </div>
           <div className="leading-tight">
-            <div className="text-white font-semibold text-sm tracking-tight">FlightGuard</div>
-            <div className="text-[10px] text-slate-500 uppercase tracking-widest">AI Agent</div>
+            <div className="text-white font-semibold text-sm tracking-tight">Envoy</div>
+            <div className="text-[10px] text-slate-500 uppercase tracking-widest">Passenger Advocate</div>
           </div>
         </div>
 
@@ -57,7 +57,7 @@ export default function Layout() {
             Settings
           </Link>
           <div className="px-3 pt-4 text-[10px] text-slate-600">
-            © 2026 FlightGuard AI
+            © 2026 Envoy
           </div>
         </div>
       </aside>
